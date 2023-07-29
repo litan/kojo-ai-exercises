@@ -1,4 +1,4 @@
-### Kojo-Ai Exercises
+### Kojo-AI Exercises
 
 This repository contains various exercises that enable you to play with different ideas in AI within Kojo.
 
