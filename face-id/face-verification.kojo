@@ -1,8 +1,8 @@
+// scroll down to the bottom of the file 
+// for code to play with
+
 cleari()
 clearOutput()
-
-val similarityThreshold = 90
-val fps = 5 // slow this down on an rpi as needed
 
 import java.io.File
 import java.awt.image.BufferedImage
@@ -204,6 +204,29 @@ val verifyButton = button("Verify")
 val learnStatusIndicator = Picture.circle(iRadius).withPenColor(gray)
 val verifyStatusIndicator = Picture.circle(iRadius).withPenColor(gray)
 
+val panel =
+    picRowCentered(
+        learnStatusIndicator, Picture.hgap(gap),
+        learnButton, Picture.hgap(gap), verifyButton,
+        Picture.hgap(gap), verifyStatusIndicator
+    )
+
+draw(panel)
+panel.setPosition(
+    cb.x + (cb.width - panel.bounds.width) / 2 + iRadius,
+    cb.y + 50)
+
+val grabber = new OpenCVFrameGrabber(0)
+Utils.runAsyncMonitored {
+    detectSequence(grabber)
+}
+
+// -----------------------------
+// Tweak stuff below as desired
+
+val similarityThreshold = 90
+val fps = 5 
+
 learnButton.onMouseClick { (x, y) =>
     if (currFaces.size == 1) {
         learnStatusIndicator.setFillColor(yellow)
@@ -233,18 +256,3 @@ verifyButton.onMouseClick { (x, y) =>
         verifyStatusIndicator.setFillColor(noColor)
     }
 }
-
-val panel =
-    picRowCentered(
-        learnStatusIndicator, Picture.hgap(gap),
-        learnButton, Picture.hgap(gap), verifyButton,
-        Picture.hgap(gap), verifyStatusIndicator
-    )
-
-draw(panel)
-panel.setPosition(
-    cb.x + (cb.width - panel.bounds.width) / 2 + iRadius,
-    cb.y + 50)
-
-val grabber = new OpenCVFrameGrabber(0)
-detectSequence(grabber)
