@@ -1,7 +1,7 @@
 cleari()
 clearOutput()
 
-val similarityThreshold = 100
+val similarityThreshold = 90
 val fps = 5 // slow this down on an rpi as needed
 
 import java.io.File
@@ -246,9 +246,5 @@ panel.setPosition(
     cb.x + (cb.width - panel.bounds.width) / 2 + iRadius,
     cb.y + 50)
 
-println(panel.bounds)
-println(4 * iRadius + 2 * btnWidth + 3 * gap)
-
-//val grabber = new OpenCVFrameGrabber(0)
-val grabber = new FFmpegFrameGrabber("/dev/video0");
+val grabber = new OpenCVFrameGrabber(0)
 detectSequence(grabber)
