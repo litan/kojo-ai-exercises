@@ -214,7 +214,7 @@ val panel =
 draw(panel)
 panel.setPosition(
     cb.x + (cb.width - panel.bounds.width) / 2 + iRadius,
-    cb.y + 50)
+    cb.y + iRadius + 5)
 
 val grabber = new OpenCVFrameGrabber(0)
 Utils.runAsyncMonitored {
