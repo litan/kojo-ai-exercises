@@ -159,21 +159,6 @@ def extractAndResizeFace(imageMat: Mat, rect: Rect): Mat = {
     faceMat
 }
 
-def checkFace(imageMat: Mat, faces: Seq[Rect]): Boolean = {
-    if (currFaces.size == 1) {
-        val faceMat = extractAndResizeFace(imageMat, faces(0))
-        val emb = faceEmbedding(faceMat)
-        val dist = distance(emb, learnedEmbedding)
-        println(s"Distance - $dist")
-        if (dist < similarityThreshold) true else false
-    }
-    else {
-        println("Verification is done only if there is one face on the screen")
-        false
-    }
-
-}
-
 def distance(a: Array[Float], b: Array[Float]): Float =
     math.sqrt(a.zip(b).map { case (x1, x2) =>
         math.pow(x1 - x2, 2)
@@ -184,8 +169,6 @@ def scriptDone() {
     vggfaceNet.close()
     faceDetectionNet.close()
 }
-
-var learnedEmbedding: Array[Float] = _
 
 val btnWidth = 100
 val gap = 10
@@ -223,9 +206,28 @@ Utils.runAsyncMonitored {
 
 // -----------------------------
 // Tweak stuff below as desired
+// Some ideas:
+// Tweak indicator colors
+// Tweak threshold and explore false positives, false negatives, etc
+// Learn an "average" face for better performance
 
 val similarityThreshold = 90
-val fps = 5 
+val fps = 5
+var learnedEmbedding: Array[Float] = _
+
+def checkFace(imageMat: Mat, faces: Seq[Rect]): Boolean = {
+    if (currFaces.size == 1) {
+        val faceMat = extractAndResizeFace(imageMat, faces(0))
+        val emb = faceEmbedding(faceMat)
+        val dist = distance(emb, learnedEmbedding)
+        println(s"Distance - $dist")
+        if (dist < similarityThreshold) true else false
+    }
+    else {
+        println("Verification is done only if there is one face on the screen")
+        false
+    }
+}
 
 learnButton.onMouseClick { (x, y) =>
     if (currFaces.size == 1) {
