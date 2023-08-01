@@ -67,8 +67,7 @@ class NonlinearModel {
     }
 
     def modelFunction(
-        xData: Placeholder[TFloat32],
-        yData: Placeholder[TFloat32]): Operand[TFloat32] = {
+        xData: Placeholder[TFloat32]): Operand[TFloat32] = {
         // Define the model function
         val mul = tf.linalg.matMul(xData, weight)
         val add = tf.math.add(mul, bias)
@@ -86,7 +85,7 @@ class NonlinearModel {
         val N = xValues.length
 
         val (xData, yData) = placeholders
-        val yPredicted = modelFunction(xData, yData)
+        val yPredicted = modelFunction(xData)
 
         // Define loss function MSE
         val sum = tf.math.pow(tf.math.sub(yData, yPredicted), tf.constant(2f))
@@ -117,7 +116,7 @@ class NonlinearModel {
 
     def predict(xValues: Array[Float]): Array[Float] = {
         val (xData, yData) = placeholders
-        val yPredicted = modelFunction(xData, yData)
+        val yPredicted = modelFunction(xData)
 
         val xTensor = TFloat32.tensorOf(
             Shape.of(xValues.length, 1),
