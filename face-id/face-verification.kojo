@@ -45,11 +45,11 @@ require(
 
 require(
     fdModelBinary.exists(),
-    s"Cannot find FD model file: ${fdModelConfiguration.getCanonicalPath}")
+    s"Cannot find FD model file: ${fdModelBinary.getCanonicalPath}")
 
 require(
     new File(vggFaceSavedModel).exists,
-    s"Cannot find VGGFace model file: ${fdModelConfiguration.getCanonicalPath}")
+    s"Cannot find VGGFace model dir: ${vggFaceSavedModel}")
 
 val faceDetectionNet = readNetFromCaffe(fdModelConfiguration.getCanonicalPath, fdModelBinary.getCanonicalPath)
 val vggfaceNet = SavedModelBundle.load(vggFaceSavedModel)
@@ -149,7 +149,7 @@ def faceEmbedding(image: Mat): Array[Float] =
         val out = use(vggfaceNet.call(args).get("global_average_pooling2d").get.asInstanceOf[TFloat32])
         val data = out.asRawTensor.data.asFloats
         val ab = new ArrayBuffer[Float]
-        for (n <- 0 until 2048) ab.append(data.getFloat(n))
+        for (n <- 0 until data.size.toInt) ab.append(data.getFloat(n))
         ab.toArray
     }.get
 
