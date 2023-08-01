@@ -11,9 +11,11 @@ import org.tensorflow.Graph
 import org.tensorflow.Operand
 import org.tensorflow.Session
 import org.tensorflow.Tensor
+import org.tensorflow.op.core.Placeholder
 
 def getInt(n: Tensor): Int = {
-    n.asRawTensor().data().asInts().getInt(0)
+    //    n.asRawTensor().data().asInts().getInt(0)
+    n.asInstanceOf[TInt32].getInt()
 }
 
 def gradient(tf: Ops, y: Operand[TInt32], x: Operand[TInt32]): Operand[_] = {
@@ -22,11 +24,11 @@ def gradient(tf: Ops, y: Operand[TInt32], x: Operand[TInt32]): Operand[_] = {
     tf.gradients(y, a).iterator().next()
 }
 
-
 val graph = new Graph()
 val tf = Ops.create(graph)
 
-val xSym = tf.variable(Shape.scalar, classOf[TInt32])
+//val xSym = tf.variable(Shape.scalar, classOf[TInt32])
+val xSym = tf.placeholder(classOf[TInt32], Placeholder.shape(Shape.scalar))
 val ySym = tf.math.mul(
     tf.constant(3),
     tf.math.mul(xSym, xSym),
@@ -35,8 +37,7 @@ val gradYSym = gradient(tf, ySym, xSym)
 
 val xActual = TInt32.scalarOf(10)
 Using(new Session(graph)) { session =>
-    val result = session
-        .runner()
+    val result = session.runner()
         .feed(xSym, xActual)
         .fetch(ySym)
         .fetch(gradYSym)
