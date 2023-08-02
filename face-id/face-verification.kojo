@@ -144,7 +144,7 @@ def faceEmbedding(image: Mat): Array[Float] =
     Using.Manager { use =>
         val src = Java2DFrameUtils.toBufferedImage(image)
         val args = new HashMap[String, Tensor]()
-        val inputTensor = imgToTensorF(removeAlphaChannel(src, white))
+        val inputTensor = imgToTensorF(removeAlphaChannel(src, white), 1)
         args.put("input_1", inputTensor)
         val out = use(vggfaceNet.call(args).get("global_average_pooling2d").get.asInstanceOf[TFloat32])
         val data = out.asRawTensor.data.asFloats
