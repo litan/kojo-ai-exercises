@@ -1,3 +1,7 @@
+// This is a work in progress
+// Plus the weights for this example are currently not uploaded in this repo
+// So it will not work if you just try to run the code
+
 import java.awt.image.BufferedImage
 import java.util
 import org.tensorflow.Tensor

@@ -90,19 +90,17 @@ class MnistModel {
     val session = new Session(graph)
 
     def train() {
-        Using.Manager { use =>
-            // Train the model
-            import scala.jdk.CollectionConverters._
-            for (trainingBatch <- dataset.trainingBatches(TRAINING_BATCH_SIZE).asScala) {
-                Using.Manager { use =>
-                    val batchImages = use(preprocessImages(trainingBatch.images))
-                    val batchLabels = use(preprocessLabels(trainingBatch.labels))
-                    session.runner
-                        .addTarget(minimize)
-                        .feed(images.asOutput, batchImages)
-                        .feed(labels.asOutput, batchLabels)
-                        .run
-                }
+        // Train the model
+        import scala.jdk.CollectionConverters._
+        for (trainingBatch <- dataset.trainingBatches(TRAINING_BATCH_SIZE).asScala) {
+            Using.Manager { use =>
+                val batchImages = use(preprocessImages(trainingBatch.images))
+                val batchLabels = use(preprocessLabels(trainingBatch.labels))
+                session.runner
+                    .addTarget(minimize)
+                    .feed(images.asOutput, batchImages)
+                    .feed(labels.asOutput, batchLabels)
+                    .run
             }
         }
     }
