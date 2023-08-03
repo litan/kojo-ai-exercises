@@ -10,6 +10,7 @@ import org.tensorflow.ndarray.Shape
 import org.tensorflow.op.core.Placeholder
 import org.tensorflow.op.Ops
 import org.tensorflow.types.TFloat32
+import org.tensorflow.op.random.TruncatedNormal
 
 val TRAINING_IMAGES_ARCHIVE = "mnist/train-images-idx3-ubyte.gz"
 val TRAINING_LABELS_ARCHIVE = "mnist/train-labels-idx1-ubyte.gz"
@@ -17,7 +18,8 @@ val TEST_IMAGES_ARCHIVE = "mnist/t10k-images-idx3-ubyte.gz"
 val TEST_LABELS_ARCHIVE = "mnist/t10k-labels-idx1-ubyte.gz"
 val VALIDATION_SIZE = 0
 val TRAINING_BATCH_SIZE = 100
-val LEARNING_RATE = 0.1f
+val LEARNING_RATE = 0.05f
+val SEED = 123456789L
 
 def preprocessImages(rawImages: ByteNdArray) = {
     val tf = Ops.create
@@ -68,10 +70,11 @@ class MnistModel {
 
     def randomw(a: Long, b: Long) =
         tf.math.mul(
-            tf.random.truncatedNormal(tf.array(a, b), classOf[TFloat32]),
+            tf.random.truncatedNormal(
+                tf.array(a, b), classOf[TFloat32], TruncatedNormal.seed(SEED)
+            ),
             tf.constant(0.1f)
         )
-
 
     // Create weights with an initial value of 0
     val weights = tf.variable(randomw(dataset.imageSize, HiddenSize))
@@ -88,13 +91,12 @@ class MnistModel {
 
     val mul = tf.linalg.matMul(images, weights)
     val add = tf.math.add(mul, biases)
-    val output1 = tf.math.sigmoid(add)
+    val output1 = tf.nn.relu(add)
+    //    val output1 = tf.math.sigmoid(add)
 
     val mul2 = tf.linalg.matMul(output1, weights2)
     val add2 = tf.math.add(mul2, biases2)
     val softmax = tf.nn.softmax(add2)
-
-    //    val softmax = tf.nn.softmax(tf.math.add(tf.linalg.matMul(images, weights), biases))
 
     val crossEntropy =
         tf.math.mean(tf.math.neg(tf.reduceSum(tf.math.mul(labels, tf.math.log(softmax)), tf.array(1))), tf.array(0))
@@ -111,7 +113,7 @@ class MnistModel {
     val session = new Session(graph)
 
     def train() {
-        for (epoch <- 0 until 25) {
+        for (epoch <- 0 until 10) {
             // Train the model
             println(s"Epoch - $epoch")
             import scala.jdk.CollectionConverters._

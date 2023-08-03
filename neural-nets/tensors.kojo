@@ -48,3 +48,4 @@ Using(new Session(graph)) { session =>
     println(s"y = ${getInt(yResult)}, dy/dx = ${getInt(yGradResult)}")
 }
 
+graph.close()
