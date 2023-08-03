@@ -250,14 +250,19 @@ learnButton.onMouseClick { (x, y) =>
 }
 
 verifyButton.onMouseClick { (x, y) =>
-    val good = checkFace(currImageMat, currFaces)
-    if (good) {
-        verifyStatusIndicator.setFillColor(green)
+    if (learnedEmbedding != null) {
+        val good = checkFace(currImageMat, currFaces)
+        if (good) {
+            verifyStatusIndicator.setFillColor(green)
+        }
+        else {
+            verifyStatusIndicator.setFillColor(red)
+        }
+        Utils.schedule(1) {
+            verifyStatusIndicator.setFillColor(noColor)
+        }
     }
     else {
-        verifyStatusIndicator.setFillColor(red)
-    }
-    Utils.schedule(2) {
-        verifyStatusIndicator.setFillColor(noColor)
+        println("First Learn, then Verify!")
     }
 }
