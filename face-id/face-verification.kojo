@@ -1,4 +1,4 @@
-// scroll down to the bottom of the file 
+// scroll down to the bottom of the file
 // for code to play with
 
 cleari()
@@ -136,15 +136,18 @@ def locateAndMarkFaces(image: Mat): Seq[Rect] = {
     faceRegions
 }
 
-def faceEmbedding(image: BufferedImage): Array[Float] = {
-    faceEmbedding(Java2DFrameUtils.toMat(image))
+def scaler(r: Float, g: Float, b: Float): (Float, Float, Float) = {
+    val switchToBgr = true
+    val (bD, gD, rD) = (91.4953f, 103.8827f, 131.0912f)
+    val (r2, g2, b2) = (r - rD, g - gD, b - bD)
+    if (switchToBgr) (b2, g2, r2) else (r2, g2, b2)
 }
 
 def faceEmbedding(image: Mat): Array[Float] =
     Using.Manager { use =>
         val src = Java2DFrameUtils.toBufferedImage(image)
         val args = new HashMap[String, Tensor]()
-        val inputTensor = imgToTensorF(removeAlphaChannel(src, white), 1)
+        val inputTensor = imgToTensorF(removeAlphaChannel(src, white), scaler _)
         args.put("input_1", inputTensor)
         val out = use(vggfaceNet.call(args).get("global_average_pooling2d").get.asInstanceOf[TFloat32])
         val data = out.asRawTensor.data.asFloats
