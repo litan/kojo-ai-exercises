@@ -49,14 +49,16 @@ class NonlinearModel {
             tf.constant(0.1f)
         )
 
+    val hidden1 = 40
+    val hidden2 = 10
     // Define variables
-    val weight = tf.variable(randomw(1, 50))
-    val bias = tf.variable(tf.zeros(tf.array(50), classOf[TFloat32]))
+    val weight = tf.variable(randomw(1, hidden1))
+    val bias = tf.variable(tf.zeros(tf.array(hidden1), classOf[TFloat32]))
 
-    val weight2 = tf.variable(randomw(50, 8))
-    val bias2 = tf.variable(tf.zeros(tf.array(8), classOf[TFloat32]))
+    val weight2 = tf.variable(randomw(hidden1, hidden2))
+    val bias2 = tf.variable(tf.zeros(tf.array(hidden2), classOf[TFloat32]))
 
-    val weight3 = tf.variable(randomw(8, 1))
+    val weight3 = tf.variable(randomw(hidden2, 1))
     val bias3 = tf.variable(tf.zeros(tf.array(1), classOf[TFloat32]))
 
     def placeholders = {
@@ -96,7 +98,7 @@ class NonlinearModel {
         val minimize = optimizer.minimize(mse)
 
         // Train the model on data
-        for (epoch <- 1 to 500) {
+        for (epoch <- 1 to 400) {
             val xTensor = TFloat32.tensorOf(
                 Shape.of(N, 1),
                 DataBuffers.of(xValues, true, false)
