@@ -1,6 +1,7 @@
 import java.io.IOException
 
 import scala.util.Using
+import scala.jdk.CollectionConverters._
 
 import org.tensorflow._
 import org.tensorflow.framework.optimizers.GradientDescent
@@ -18,7 +19,7 @@ val TEST_IMAGES_ARCHIVE = "mnist/t10k-images-idx3-ubyte.gz"
 val TEST_LABELS_ARCHIVE = "mnist/t10k-labels-idx1-ubyte.gz"
 val VALIDATION_SIZE = 0
 val TRAINING_BATCH_SIZE = 100
-val LEARNING_RATE = 0.05f
+val LEARNING_RATE = 0.07f
 val SEED = 123456789L
 
 def preprocessImages(rawImages: ByteNdArray) = {
@@ -66,8 +67,6 @@ class MnistModel {
     val images = tf.placeholder(classOf[TFloat32], Placeholder.shape(Shape.of(-1, dataset.imageSize)))
     val labels = tf.placeholder(classOf[TFloat32], Placeholder.shape(Shape.of(-1, MnistDataset.NUM_CLASSES)))
 
-    val HiddenSize = 5
-
     def randomw(a: Long, b: Long) =
         tf.math.mul(
             tf.random.truncatedNormal(
@@ -76,34 +75,48 @@ class MnistModel {
             tf.constant(0.1f)
         )
 
-    // Create weights with an initial value of 0
-    val weights = tf.variable(randomw(dataset.imageSize, HiddenSize))
+    val hidden1 = 38
+    val hidden2 = 12
 
-    // Create biases with an initial value of 0
-    val biasShape = tf.array(HiddenSize)
-    val biases = tf.variable(tf.zeros(biasShape, classOf[TFloat32]))
+    val weight = tf.variable(randomw(dataset.imageSize, hidden1))
+    val bias = tf.variable(tf.zeros(tf.array(hidden1), classOf[TFloat32]))
 
-    val weights2 = tf.variable(randomw(HiddenSize, MnistDataset.NUM_CLASSES))
+    val weight2 = tf.variable(randomw(hidden1, hidden2))
+    val bias2 = tf.variable(tf.zeros(tf.array(hidden2), classOf[TFloat32]))
 
-    // Create biases with an initial value of 0
-    val biasShape2 = tf.array(MnistDataset.NUM_CLASSES)
-    val biases2 = tf.variable(tf.zeros(biasShape2, classOf[TFloat32]))
+    val weight3 = tf.variable(randomw(hidden2, MnistDataset.NUM_CLASSES))
+    val bias3 = tf.variable(tf.zeros(tf.array(MnistDataset.NUM_CLASSES), classOf[TFloat32]))
 
-    val mul = tf.linalg.matMul(images, weights)
-    val add = tf.math.add(mul, biases)
+    // Define the model function
+    val mul = tf.linalg.matMul(images, weight)
+    val add = tf.math.add(mul, bias)
     val output1 = tf.nn.relu(add)
-    //    val output1 = tf.math.sigmoid(add)
 
-    val mul2 = tf.linalg.matMul(output1, weights2)
-    val add2 = tf.math.add(mul2, biases2)
-    val softmax = tf.nn.softmax(add2)
+    val mul2 = tf.linalg.matMul(output1, weight2)
+    val add2 = tf.math.add(mul2, bias2)
+    val output2 = tf.nn.relu(add2)
+
+    val mul3 = tf.linalg.matMul(output2, weight3)
+    val add3 = tf.math.add(mul3, bias3)
+    val softmax = tf.nn.softmax(add3)
 
     val crossEntropy =
         tf.math.mean(tf.math.neg(tf.reduceSum(tf.math.mul(labels, tf.math.log(softmax)), tf.array(1))), tf.array(0))
 
+    val rLossComponents = ArrayBuffer[org.tensorflow.Operand[TFloat32]](
+        tf.nn.l2Loss(weight), tf.nn.l2Loss(bias)
+    ).asJava
+
+    val regLoss = tf.math.addN(rLossComponents)
+
+    val totalLoss = tf.math.add(
+        crossEntropy,
+        tf.math.mul(regLoss, tf.constant(1e-4f))
+    )
+
     // Back-propagate gradients to variables for training
     val optimizer = new GradientDescent(graph, LEARNING_RATE)
-    val minimize = optimizer.minimize(crossEntropy)
+    val minimize = optimizer.minimize(totalLoss)
 
     // Compute the accuracy of the model
     val predicted = tf.math.argMax(softmax, tf.constant(1))
@@ -113,10 +126,9 @@ class MnistModel {
     val session = new Session(graph)
 
     def train() {
-        for (epoch <- 0 until 10) {
+        for (epoch <- 0 until 30) {
             // Train the model
             println(s"Epoch - $epoch")
-            import scala.jdk.CollectionConverters._
             for (trainingBatch <- dataset.trainingBatches(TRAINING_BATCH_SIZE).asScala) {
                 Using.Manager { use =>
                     val batchImages = use(preprocessImages(trainingBatch.images))
