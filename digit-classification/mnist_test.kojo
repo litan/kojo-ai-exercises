@@ -32,7 +32,7 @@ def imgGrayToTensorF(image: BufferedImage): TFloat32 = {
 cleari()
 
 val scriptDir = Utils.kojoCtx.baseDir
-val mnistModel = s"$scriptDir/mnist_dense_model"
+val mnistModel = s"$scriptDir/mnist_model_967"
 
 require(
     new File(mnistModel).exists,
