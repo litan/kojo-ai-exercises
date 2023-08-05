@@ -7,7 +7,7 @@ clearOutput()
 val m = 10
 val c = 3
 val xData = Array.tabulate(20)(e => (e + 1.0))
-val yData = xData map (_ * m + c + randomDouble(-2.5, 2.5))
+val yData = xData map (_ * m + c + randomDouble(-0.5, 0.5))
 
 val chart = scatterChart("Regression Data", "X", "Y", xData, yData)
 chart.getStyler.setLegendVisible(true)
@@ -32,7 +32,9 @@ class Model {
 
     // Define variables
     val weight = tf.variable(tf.constant(1f))
-    val bias = tf.variable(tf.constant(1f))
+    val bias = tf.variable(tf.constant(0f))
+
+    import scala.util.Using
 
     def train(xValues: Array[Float], yValues: Array[Float]): Unit = {
         val N = xValues.length
@@ -40,12 +42,15 @@ class Model {
         val xData = tf.placeholder(classOf[TFloat32], Placeholder.shape(Shape.scalar))
         val yData = tf.placeholder(classOf[TFloat32], Placeholder.shape(Shape.scalar))
 
-        // Define the model function weight*x + bias
+        // Define the model function x*weight + bias
         val mul = tf.math.mul(xData, weight)
         val yPredicted = tf.math.add(mul, bias)
 
         // Define loss function MSE
-        val sum = tf.math.pow(tf.math.sub(yPredicted, yData), tf.constant(2f))
+        val sum = tf.math.pow(
+            tf.math.sub(yPredicted, yData),
+            tf.constant(2f)
+        )
         val mse = tf.math.div(sum, tf.constant(2f * N))
 
         // Back-propagate gradients to variables for training
@@ -53,18 +58,19 @@ class Model {
         val minimize = optimizer.minimize(mse)
 
         // Train the model on data
-        for (epoch <- 1 to 150) {
-            for (i <- xValues.indices) {
-                val y = yValues(i)
-                val x = xValues(i)
-                val xTensor = TFloat32.scalarOf(x)
-                val yTensor = TFloat32.scalarOf(y)
-                session.runner
-                    .addTarget(minimize)
-                    .feed(xData.asOutput, xTensor)
-                    .feed(yData.asOutput, yTensor)
-                    .run
-                xTensor.close(); yTensor.close()
+        Using.Manager { use =>
+            for (epoch <- 1 to 50) {
+                for (i <- xValues.indices) {
+                    val x = xValues(i)
+                    val y = yValues(i)
+                    val xTensor = use(TFloat32.scalarOf(x))
+                    val yTensor = use(TFloat32.scalarOf(y))
+                    session.runner
+                        .addTarget(minimize)
+                        .feed(xData, xTensor)
+                        .feed(yData, yTensor)
+                        .run()
+                }
             }
         }
 
@@ -84,18 +90,19 @@ class Model {
         val mul = tf.math.mul(xData, weight)
         val yPredicted = tf.math.add(mul, bias)
 
-        xValues.map { x =>
-            val xTensor = TFloat32.scalarOf(x)
-            val yPredictedTensor = session.runner
-            .feed(xData, xTensor)
-            .fetch(yPredicted)
-            .run
-            .get(0).asInstanceOf[TFloat32]
-            
-            val predictedY = yPredictedTensor.getFloat()
-            xTensor.close(); yPredictedTensor.close()
-            predictedY
-        }
+        Using.Manager { use =>
+            xValues.map { x =>
+                val xTensor = use(TFloat32.scalarOf(x))
+                val yPredictedTensor = use(session.runner
+                    .feed(xData, xTensor)
+                    .fetch(yPredicted)
+                    .run
+                    .get(0).asInstanceOf[TFloat32])
+
+                val predictedY = yPredictedTensor.getFloat()
+                predictedY
+            }
+        }.get
     }
 
     def close() {
