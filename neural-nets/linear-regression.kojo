@@ -35,6 +35,13 @@ class Model {
     val bias = tf.variable(tf.constant(0f))
 
     import scala.util.Using
+    import org.tensorflow.Operand
+
+    def modelFunction(xData: Placeholder[TFloat32]): Operand[TFloat32] = {
+        // Define the model function x*weight + bias
+        val mul = tf.math.mul(xData, weight)
+        tf.math.add(mul, bias)
+    }
 
     def train(xValues: Array[Float], yValues: Array[Float]): Unit = {
         val N = xValues.length
@@ -42,9 +49,7 @@ class Model {
         val xData = tf.placeholder(classOf[TFloat32], Placeholder.shape(Shape.scalar))
         val yData = tf.placeholder(classOf[TFloat32], Placeholder.shape(Shape.scalar))
 
-        // Define the model function x*weight + bias
-        val mul = tf.math.mul(xData, weight)
-        val yPredicted = tf.math.add(mul, bias)
+        val yPredicted = modelFunction(xData)
 
         // Define loss function MSE
         val sum = tf.math.pow(
@@ -86,9 +91,7 @@ class Model {
         // Define placeholders
         val xData = tf.placeholder(classOf[TFloat32], Placeholder.shape(Shape.scalar))
 
-        // Define the model function weight*x + bias
-        val mul = tf.math.mul(xData, weight)
-        val yPredicted = tf.math.add(mul, bias)
+        val yPredicted = modelFunction(xData)
 
         Using.Manager { use =>
             xValues.map { x =>
