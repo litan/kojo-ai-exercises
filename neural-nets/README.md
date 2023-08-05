@@ -1,7 +1,7 @@
 ## Exercises
 
 ### tensors.kojo
-Find the value of `y` and `dy/dx` for the following expressions -- by making appropriate changes to the code and then running it:
+For `x = 15`, find the value of `y` and `dy/dx` for the following expressions -- by making appropriate changes to the code and then running it:
 1. `y = 2x^2 + 3x + 7`
 2. `y = 5x^3 + 6x`
 
