@@ -73,10 +73,24 @@ class MnistModel {
     val biases = tf.variable(tf.zeros(biasShape, classOf[TFloat32]))
 
     // Predict the class of each image in the batch and compute the loss
-    val softmax = tf.nn.softmax(tf.math.add(tf.linalg.matMul(images, weights), biases))
+    val softmax =
+        tf.nn.softmax(
+            tf.math.add(
+                tf.linalg.matMul(images, weights),
+                biases
+            )
+        )
 
     val crossEntropy =
-        tf.math.mean(tf.math.neg(tf.reduceSum(tf.math.mul(labels, tf.math.log(softmax)), tf.array(1))), tf.array(0))
+        tf.math.mean(
+            tf.math.neg(
+                tf.reduceSum(
+                    tf.math.mul(labels, tf.math.log(softmax)),
+                    tf.array(1)
+                )
+            ),
+            tf.array(0)
+        )
 
     // Back-propagate gradients to variables for training
     val optimizer = new GradientDescent(graph, LEARNING_RATE)
