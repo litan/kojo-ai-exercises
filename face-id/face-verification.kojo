@@ -234,7 +234,7 @@ def checkFace(imageMat: Mat, faces: Seq[Rect]): Boolean = {
 
 learnButton.onMouseClick { (x, y) =>
     if (currFaces.size == 1) {
-        learnStatusIndicator.setFillColor(yellow)
+        learnStatusIndicator.setFillColor(cm.purple)
         Utils.runAsyncQueued {
             val faceMat = extractAndResizeFace(currImageMat, currFaces(0))
             learnedEmbedding = faceEmbedding(faceMat)
