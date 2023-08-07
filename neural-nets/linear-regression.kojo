@@ -7,7 +7,7 @@ clearOutput()
 val m = 10
 val c = 3
 val xData = Array.tabulate(20)(e => (e + 1.0))
-val yData = xData map (_ * m + c + randomDouble(-0.5, 0.5))
+val yData = xData map (x => x * m + c + randomDouble(-0.5, 0.5))
 
 val chart = scatterChart("Regression Data", "X", "Y", xData, yData)
 chart.getStyler.setLegendVisible(true)
@@ -43,6 +43,11 @@ class Model {
         tf.math.add(mul, bias)
     }
 
+    import org.tensorflow.Tensor
+    def getFloat(n: Tensor): Float = {
+        n.asInstanceOf[TFloat32].getFloat()
+    }
+
     def train(xValues: Array[Float], yValues: Array[Float]): Unit = {
         val N = xValues.length
         // Define placeholders
@@ -64,7 +69,7 @@ class Model {
 
         // Train the model on data
         Using.Manager { use =>
-            for (epoch <- 1 to 50) {
+            for (epoch <- 1 to 100) {
                 for (i <- xValues.indices) {
                     val x = xValues(i)
                     val y = yValues(i)
@@ -77,14 +82,14 @@ class Model {
                         .run()
                 }
             }
+
+            val result = use(session.runner.fetch(weight).fetch(bias).run())
+            val weightValue = getFloat(result.get(0))
+            val biasValue = getFloat(result.get(1))
+
+            println("Weight is " + weightValue)
+            println("Bias is " + biasValue)
         }
-
-        val wb = session.runner.fetch(weight).fetch(bias).run
-        val weightValue = wb.get(0).asInstanceOf[TFloat32]
-        val biasValue = wb.get(1).asInstanceOf[TFloat32]
-
-        println("Weight is " + weightValue.getFloat())
-        println("Bias is " + biasValue.getFloat())
     }
 
     def predict(xValues: Array[Float]): Array[Float] = {
@@ -96,13 +101,13 @@ class Model {
         Using.Manager { use =>
             xValues.map { x =>
                 val xTensor = use(TFloat32.scalarOf(x))
-                val yPredictedTensor = use(session.runner
-                    .feed(xData, xTensor)
-                    .fetch(yPredicted)
-                    .run
-                    .get(0).asInstanceOf[TFloat32])
+                val result =
+                    use(session.runner
+                        .feed(xData, xTensor)
+                        .fetch(yPredicted)
+                        .run())
 
-                val predictedY = yPredictedTensor.getFloat()
+                val predictedY = getFloat(result.get(0))
                 predictedY
             }
         }.get
