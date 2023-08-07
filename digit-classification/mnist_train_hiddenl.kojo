@@ -140,6 +140,8 @@ class MnistModel {
                         .run
                 }
             }
+            // don't do this!
+            // use a validation set instead
             if (epoch % 5 == 0) {
                 test()
             }
