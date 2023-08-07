@@ -162,11 +162,6 @@ def extractAndResizeFace(imageMat: Mat, rect: Rect): Mat = {
     faceMat
 }
 
-def distance(a: Array[Float], b: Array[Float]): Float =
-    math.sqrt(a.zip(b).map { case (x1, x2) =>
-        math.pow(x1 - x2, 2)
-    }.sum).toFloat
-
 def scriptDone() {
     println("Closing Nets...")
     vggfaceNet.close()
@@ -217,6 +212,25 @@ Utils.runAsyncMonitored {
 val similarityThreshold = 90
 val fps = 5
 var learnedEmbedding: Array[Float] = _
+
+def distance(a: Array[Float], b: Array[Float]): Float = {
+    math.sqrt(
+        a.zip(b).map { case (x1, x2) =>
+            math.pow(x1 - x2, 2)
+        }.sum
+    ).toFloat
+}
+
+def distance2(a: Array[Float], b: Array[Float]): Float = {
+    require(a.length == b.length)
+    var sumSqdiff = 0.0
+    for (idx <- 0 until a.length) {
+        val an = a(idx); val bn = b(idx)
+        val sqDiff = math.pow(an - bn, 2)
+        sumSqdiff += sqDiff
+    }
+    math.sqrt(sumSqdiff).toFloat
+}
 
 def checkFace(imageMat: Mat, faces: Seq[Rect]): Boolean = {
     if (currFaces.size == 1) {
