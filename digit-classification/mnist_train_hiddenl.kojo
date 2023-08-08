@@ -104,7 +104,9 @@ class MnistModel {
         tf.math.mean(tf.math.neg(tf.reduceSum(tf.math.mul(labels, tf.math.log(softmax)), tf.array(1))), tf.array(0))
 
     val rLossComponents = ArrayBuffer[org.tensorflow.Operand[TFloat32]](
-        tf.nn.l2Loss(weight), tf.nn.l2Loss(bias)
+        tf.nn.l2Loss(weight), 
+        tf.nn.l2Loss(weight2),
+        tf.nn.l2Loss(weight3),
     ).asJava
 
     val regLoss = tf.math.addN(rLossComponents)
