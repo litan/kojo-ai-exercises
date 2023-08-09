@@ -112,9 +112,9 @@ class MnistModel {
                 val batchLabels = use(preprocessLabels(trainingBatch.labels))
                 session.runner
                     .addTarget(minimize)
-                    .feed(images.asOutput, batchImages)
-                    .feed(labels.asOutput, batchLabels)
-                    .run
+                    .feed(images, batchImages)
+                    .feed(labels, batchLabels)
+                    .run()
             }
         }
     }
