@@ -110,9 +110,7 @@ def locateAndMarkFaces(image: Mat): Seq[Rect] = {
     faceDetectionNet.setInput(inputBlob)
 
     // Make forward pass, compute output
-    val t0 = epochTime
     val detections = faceDetectionNet.forward()
-    val t1 = epochTime
 
     // Decode detected face locations
     val di = detections.createIndexer().asInstanceOf[FloatIndexer]
@@ -179,6 +177,14 @@ def button(label: String): Picture = {
     )
 }
 
+// -----------------------------
+// Tweak stuff below as desired
+// Some ideas:
+// Tweak indicator colors
+// Tweak threshold and explore false positives, false negatives, etc
+// make buttons inactive while work is happening
+// Learn an "average" face for better performance
+
 val cb = canvasBounds
 val learnButton = button("Learn")
 val verifyButton = button("Verify")
@@ -196,18 +202,6 @@ draw(panel)
 panel.setPosition(
     cb.x + (cb.width - panel.bounds.width) / 2 + iRadius,
     cb.y + iRadius + 5)
-
-val grabber = new OpenCVFrameGrabber(0)
-Utils.runAsyncMonitored {
-    detectSequence(grabber)
-}
-
-// -----------------------------
-// Tweak stuff below as desired
-// Some ideas:
-// Tweak indicator colors
-// Tweak threshold and explore false positives, false negatives, etc
-// Learn an "average" face for better performance
 
 val similarityThreshold = 90
 val fps = 5
@@ -279,4 +273,9 @@ verifyButton.onMouseClick { (x, y) =>
     else {
         println("First Learn, then Verify!")
     }
+}
+
+val grabber = new OpenCVFrameGrabber(0)
+Utils.runAsyncMonitored {
+    detectSequence(grabber)
 }
