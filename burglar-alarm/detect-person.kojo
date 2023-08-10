@@ -1,16 +1,12 @@
-// This is a work in progress
-// Plus the weights for this example are currently not uploaded in this repo
-// So it will not work if you just try to run the code
-
 import java.awt.image.BufferedImage
 import java.util
+
 import org.tensorflow.Tensor
 import org.tensorflow.ndarray.Shape
 import org.tensorflow.ndarray.buffer.DataBuffers
 import org.tensorflow.types.TFloat32
 import org.tensorflow.types.TUint8
 import org.tensorflow.SavedModelBundle
-import net.kogics.kojo.tensorutil._
 
 import org.bytedeco.javacv._
 import org.bytedeco.opencv.global.opencv_core.CV_32F
@@ -21,8 +17,12 @@ import org.bytedeco.opencv.global.opencv_imgproc.rectangle
 import org.bytedeco.opencv.global.opencv_imgproc.resize
 import org.bytedeco.opencv.global.opencv_imgcodecs.imread
 
-val kojoAiRoot = "/home/lalit/work/kojo-ai-2"
-val savedModel = "/home/lalit/work/object-det/models/ssdlite_mobilenet_v2_coco_2018_05_09/saved_model"
+import net.kogics.kojo.tensorutil._
+import net.kogics.kojo.util.Utils
+
+val scriptDir = Utils.kojoCtx.baseDir
+val savedModel = s"$scriptDir/ssdlite_mobilenet_v2_coco_2018_05_09/saved_model"
+val labelsFile = scala.io.Source.fromFile(s"$scriptDir/mscoco-labels.txt")
 
 val fps = 5
 cleari()
@@ -32,7 +32,6 @@ var pics = ArrayBuffer.empty[Picture]
 
 val model = SavedModelBundle.load(savedModel)
 
-val labelsFile = scala.io.Source.fromFile(s"$kojoAiRoot/samples/mscoco-labels.txt")
 val labels = HashMap.empty[Int, String]
 labelsFile.getLines.zipWithIndex.foreach {
     case (line, idx) =>
@@ -91,20 +90,16 @@ def detectBox(src: BufferedImage, box: ArrayBuffer[Float], label: String, pics2:
     val ymax1 = h * box(2)
     val ymin = h - ymax1
     val bbox = Picture.rectangle(xmax - xmin, ymax - ymin)
-    val bbox2 = Picture.rectangle(xmax - xmin, ymax - ymin)
     val lbl = Picture.text(label)
     val lbl2 = Picture.text(label)
     bbox.setPosition(xmin, ymin)
-    bbox2.setPosition(xmin, ymin)
     bbox.setPenColor(ColorMaker.hsl(60, 0.91, 0.68))
-    bbox2.setPenColor(darkGray)
-    bbox.setPenThickness(4)
-    bbox2.setPenThickness(6)
+    bbox.setPenThickness(1)
     lbl.setPosition(xmin, ymin)
     lbl.setPenColor(yellow)
     lbl2.setPosition(xmin + 1, ymin - 1)
     lbl2.setPenColor(black)
-    pics2.append(bbox2, bbox, lbl2, lbl)
+    pics2.append(bbox, lbl2, lbl)
 }
 
 def detectBoxes(detectionOutput: DetectionOutput, src: BufferedImage, pics2: ArrayBuffer[Picture]) {
