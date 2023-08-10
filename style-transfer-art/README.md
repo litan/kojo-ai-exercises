@@ -12,3 +12,9 @@ Quick steps:
   * If a run takes more than 15 seconds, Kojo will complain about a potential deadlock. You can safely ignore this *error*.
 
 
+Models and images for this project are from:
+https://github.com/emla2805/arbitrary-style-transfer
+https://www.tensorflow.org/hub/tutorials/tf2_arbitrary_image_stylization
+
+Some images are from:
+https://github.com/magenta/magenta/tree/main/magenta/models/arbitrary_image_stylization
