@@ -27,7 +27,7 @@ import net.kogics.kojo.nst.removeAlphaChannel
 import net.kogics.kojo.util.Utils
 
 val scriptDir = Utils.kojoCtx.baseDir
-val confidenceThreshold = 0.5
+val fdConfidenceThreshold = 0.5
 val fdModelConfiguration = new File(s"$scriptDir/face_detection_model/deploy.prototxt")
 val fdModelBinary = new File(s"$scriptDir/face_detection_model/res10_300x300_ssd_iter_140000.caffemodel")
 val inWidth = 300
@@ -54,10 +54,11 @@ require(
 val faceDetectionNet = readNetFromCaffe(fdModelConfiguration.getCanonicalPath, fdModelBinary.getCanonicalPath)
 val vggfaceNet = SavedModelBundle.load(vggFaceSavedModel)
 
-var pic: Picture = _
-var lastFrameTime = epochTimeMillis
+@volatile var videoFramePic: Picture = _
+@volatile var lastFrameTime = epochTimeMillis
 @volatile var currImageMat: Mat = _
 @volatile var currFaces: Seq[Rect] = _
+
 def detectSequence(grabber: FrameGrabber): Unit = {
     val delay = 1000.0 / fps
     grabber.start()
@@ -70,15 +71,15 @@ def detectSequence(grabber: FrameGrabber): Unit = {
                 val imageMat = Java2DFrameUtils.toMat(frame)
                 if (imageMat != null) { // sometimes the first few frames are empty so we ignore them
                     val faces = locateAndMarkFaces(imageMat)
-                    val pic2 = Picture.image(Java2DFrameUtils.toBufferedImage(imageMat))
-                    centerPic(pic2, imageMat.size(1), imageMat.size(0))
-                    pic2.draw()
+                    val vfPic2 = Picture.image(Java2DFrameUtils.toBufferedImage(imageMat))
+                    centerPic(vfPic2, imageMat.size(1), imageMat.size(0))
+                    vfPic2.draw()
                     currImageMat = imageMat
                     currFaces = faces
-                    if (pic != null) {
-                        pic.erase()
+                    if (videoFramePic != null) {
+                        videoFramePic.erase()
                     }
-                    pic = pic2
+                    videoFramePic = vfPic2
                     lastFrameTime = currTime
                 }
             }
@@ -118,7 +119,7 @@ def locateAndMarkFaces(image: Mat): Seq[Rect] = {
         for {
             i <- 0 until detections.size(2)
             confidence = di.get(0, 0, i, 2)
-            if (confidence > confidenceThreshold)
+            if (confidence > fdConfidenceThreshold)
         } yield {
             val x1 = (di.get(0, 0, i, 3) * imageWidth).toInt
             val y1 = (di.get(0, 0, i, 4) * imageHeight).toInt
@@ -242,6 +243,7 @@ def checkFace(imageMat: Mat, faces: Seq[Rect]): Boolean = {
 
 learnButton.onMouseClick { (x, y) =>
     if (currFaces.size == 1) {
+        println("Learning Face")
         learnStatusIndicator.setFillColor(cm.purple)
         Utils.runAsyncQueued {
             val faceMat = extractAndResizeFace(currImageMat, currFaces(0))
