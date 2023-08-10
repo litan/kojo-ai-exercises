@@ -1,4 +1,4 @@
-### Ganme Art Generation
+### Game Art Generation
 
 This poject gives you an opportunity to create game art using AI techniques like Stable Diffusion. The game code is provided, so that you can focus on the art creation. 
 
